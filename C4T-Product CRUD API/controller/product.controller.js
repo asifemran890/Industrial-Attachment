@@ -10,15 +10,27 @@ const CreateProduct = async (req, res) => {
     data: product,
   });
 };
-
 const GetAllProducts = async (req, res) => {
-  const products = await Product.find();
-  res.json({
-    message: "All products",
-    products: products,
-  });
-};
+  try {
+    const page = parseInt(req.query.page) || 1; 
+    const limit = parseInt(req.query.limit) || 5; 
+    const skip = (page - 1) * limit;
 
+    const totalData = await Product.countDocuments();
+    const products = await Product.find().skip(skip).limit(limit);
+
+    res.json({
+      success: true,
+      currentPage: page,
+      totalPages: Math.ceil(totalData / limit),
+      totalData: totalData,
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 const UpdateProduct = async (req, res) => {
   const productId = await Product.findById(req.params.id);
 
